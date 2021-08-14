@@ -1,0 +1,17 @@
+{
+  "name": "plotman",
+  "version": "0.0.1",
+  "description": "Plotman is a JavaScript library to plot points on x, y plane to create custom charts",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "plot",
+    "chart",
+    "javascript",
+    "graph"
+  ],
+  "author": "Samir Damle",
+  "license": "MIT"
+}
