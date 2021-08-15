@@ -1,17 +1,41 @@
 {
-  "name": "plotman",
-  "version": "0.0.1",
-  "description": "Plotman is a JavaScript library to plot points on x, y plane to create custom charts",
-  "main": "index.js",
-  "scripts": {
-    "test": "test"
-  },
-  "keywords": [
-    "plot",
-    "chart",
-    "javascript",
-    "graph"
-  ],
-  "author": "Samir Damle",
-  "license": "MIT"
+    "name": "plotman",
+    "version": "0.0.1",
+    "description": "Plotman is a JavaScript library to plot points on x, y plane to create custom charts",
+    "main": "dist/index.js",
+    "module": "dist/index.es.js",
+    "files": [
+        "dist/*"
+    ],
+    "scripts": {
+        "build": "rimraf dist && tsc && rollup -c rollup.config.js",
+        "lint": "tslint -c tslint.json \"src/**/*.ts\"",
+        "lint:fix": "tslint --fix -c tslint.json \"src/**/*.ts\"",
+        "test": "test"
+    },
+    "keywords": [
+        "plot",
+        "chart",
+        "javascript",
+        "graph"
+    ],
+    "author": "Samir Damle",
+    "license": "MIT",
+    "devDependencies": {
+        "@open-wc/building-rollup": "^1.10.0",
+        "deepmerge": "^4.2.2",
+        "rimraf": "^3.0.2",
+        "rollup": "^2.56.2",
+        "rollup-plugin-babel": "^4.3.2",
+        "rollup-plugin-commonjs": "^9.2.0",
+        "rollup-plugin-node-resolve": "^4.0.0",
+        "rollup-plugin-peer-deps-external": "^2.2.0",
+        "rollup-plugin-terser": "^7.0.2",
+        "rollup-plugin-typescript2": "^0.30.0",
+        "rollup-plugin-url": "^2.1.0",
+        "typescript": "^4.3.5"
+    },
+    "dependencies": {
+        "ts-deepmerge": "^1.0.8"
+    }
 }

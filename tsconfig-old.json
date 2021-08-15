@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "declaration": false,
+        "diagnostics": true,
+        "downlevelIteration": true,
+        "esModuleInterop": false,
+        "forceConsistentCasingInFileNames": true,
+        "lib": ["es2017"],
+        "module": "esnext",
+        "moduleResolution": "node",
+        "noEmitOnError": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noLib": false,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "outDir": "out-tsc",
+        "removeComments": true,
+        "rootDir": "./",
+        "sourceMap": true,
+        "strict": true,
+        "target": "es2018",
+        "typeRoots": ["/.node_modules/@types"]
+    },
+    "include": ["./src/*.ts"]
+}
