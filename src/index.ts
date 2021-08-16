@@ -19,9 +19,6 @@ type Axis = {
     bins?: number
     categories?: string[]
     ticks?: Tick[]
-    // tick: {
-    //     margin: number
-    // }
 }
 
 type Config = {
@@ -85,47 +82,6 @@ function plotman(config: Config = defaultConfig) {
     const plotW = width - margin.left - margin.right
     const plotH = height - margin.top - margin.bottom
 
-    /* if (xAxis.categories && xAxis.categories.length > 0) {
-        xAxis.ticks = xAxis.categories.map((cat: string, catIndex: number) => {
-            const len = Array.isArray(xAxis.categories) ? xAxis.categories.length : 1
-            const interval = len ? plotW / len : 1
-            const tick: Tick = {
-                label: cat,
-                x: (catIndex + 0.5) * interval,
-                y: 0,
-            }
-            return tick
-        })
-    } else if (xAxis.bins != null) {
-        xAxis.ticks = Array(xAxis.bins + 1)
-            .fill(1)
-            .map((_, binIndex) => {
-                const px = xAxis.min + (binIndex * xRange) / (xAxis.bins ?? 1)
-                const x = plotX(px) || 0
-                const tick: Tick = {
-                    label: (xAxis.tick?.prefix || '') + px + (xAxis.tick?.suffix || ''),
-                    x,
-                    y: 0,
-                }
-                return tick
-            })
-    } else {
-        const bins = xAxis.interval ? Math.floor(xRange / xAxis.interval) : 2
-        xAxis.interval = xAxis.interval || xRange / bins || 1
-        xAxis.ticks = Array(bins + 1)
-            .fill(1)
-            .map((_, binIndex) => {
-                const px = xAxis.min + binIndex * (xAxis.interval || 1)
-                const x = plotX(px) || 0
-                const tick: Tick = {
-                    label: (xAxis.tick?.prefix || '') + px + (xAxis.tick?.suffix || ''),
-                    x,
-                    y: 0,
-                }
-                return tick
-            })
-    } */
-
     function setTicks(axis: any, range: number, isX: boolean) {
         if (axis.categories && axis.categories.length > 0) {
             axis.ticks = axis.categories.map((cat: string, catIndex: number) => {
@@ -167,7 +123,6 @@ function plotman(config: Config = defaultConfig) {
                     return tick
                 })
         }
-        // if (!isX) axis.ticks.reverse()
         return axis
     }
 
@@ -190,9 +145,6 @@ function plotman(config: Config = defaultConfig) {
     }
 
     function plotXY(x: number | string, y: number | string, data: any) {
-        // const px = typeof x === 'number' ? x : data != null ? get(data, x) : null
-        // const py = typeof y === 'number' ? y : data != null ? get(data, y) : null
-        // const point = { x: px != null ? (px * plotW) / xRange : null, y: py != null ? (py * plotH) / yRange : null, data }
         const point = { x: plotX(x, data), y: plotY(y, data), data }
         return point
     }

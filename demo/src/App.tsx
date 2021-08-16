@@ -28,7 +28,7 @@ const settings3 = { ...settings1, xAxis: { bins: 10 }, yAxis: { categories }, fi
 function App() {
     const { config, plotXY } = plotman({ width: 600, margin: { top: 80 }, xAxis: { categories }, yAxis: { interval: 20 } })
     return (
-        <div className="app" style={{ paddingTop: '400px' }}>
+        <div className="app" style={{ paddingTop: '0px' }}>
             <div className="row">
                 <div className="col-4">
                     <ScatterPlot data={data} settings={settings1} />
