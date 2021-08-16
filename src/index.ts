@@ -72,12 +72,20 @@ const defaultConfig: Config = {
 function plotman(config: Config = defaultConfig) {
     config = merge(defaultConfig, config)
     let { width, height, margin, xAxis, yAxis } = config
+    if (xAxis.categories && xAxis.categories.length > 0) {
+        xAxis.min = 0
+        xAxis.max = xAxis.categories.length
+    }
+    if (yAxis.categories && yAxis.categories.length > 0) {
+        yAxis.min = 0
+        yAxis.max = yAxis.categories.length
+    }
     const xRange = Math.abs(xAxis.max - xAxis.min)
     const yRange = Math.abs(yAxis.max - yAxis.min)
     const plotW = width - margin.left - margin.right
     const plotH = height - margin.top - margin.bottom
 
-    if (xAxis.categories && xAxis.categories.length > 0) {
+    /* if (xAxis.categories && xAxis.categories.length > 0) {
         xAxis.ticks = xAxis.categories.map((cat: string, catIndex: number) => {
             const len = Array.isArray(xAxis.categories) ? xAxis.categories.length : 1
             const interval = len ? plotW / len : 1
@@ -116,7 +124,55 @@ function plotman(config: Config = defaultConfig) {
                 }
                 return tick
             })
+    } */
+
+    function setTicks(axis: any, range: number, isX: boolean) {
+        if (axis.categories && axis.categories.length > 0) {
+            axis.ticks = axis.categories.map((cat: string, catIndex: number) => {
+                const len = Array.isArray(axis.categories) ? axis.categories.length : 1
+                const interval = len ? (isX ? plotW : plotH) / len : 1
+                const tick: Tick = {
+                    label: cat,
+                    x: isX ? (catIndex + 0.5) * interval : 0,
+                    y: !isX ? plotH - (catIndex + 0.5) * interval : 0,
+                }
+                return tick
+            })
+        } else if (axis.bins != null) {
+            axis.ticks = Array(axis.bins + 1)
+                .fill(1)
+                .map((_, binIndex) => {
+                    const value = axis.min + (binIndex * range) / (axis.bins ?? 1)
+                    const coord = (isX ? plotX(value) : plotY(value)) || 0
+                    const tick: Tick = {
+                        label: (axis.tick?.prefix || '') + value + (axis.tick?.suffix || ''),
+                        x: isX ? coord : 0,
+                        y: !isX ? coord : 0,
+                    }
+                    return tick
+                })
+        } else {
+            const bins = axis.interval ? Math.floor(range / axis.interval) : 2
+            axis.interval = axis.interval || range / bins || 1
+            axis.ticks = Array(bins + 1)
+                .fill(1)
+                .map((_, binIndex) => {
+                    const value = axis.min + binIndex * (axis.interval || 1)
+                    const coord = (isX ? plotX(value) : plotY(value)) || 0
+                    const tick: Tick = {
+                        label: (axis.tick?.prefix || '') + value + (axis.tick?.suffix || ''),
+                        x: isX ? coord : 0,
+                        y: !isX ? coord : 0,
+                    }
+                    return tick
+                })
+        }
+        // if (!isX) axis.ticks.reverse()
+        return axis
     }
+
+    xAxis = setTicks(xAxis, xRange, true)
+    yAxis = setTicks(yAxis, yRange, false)
 
     config = {
         ...config,
@@ -142,13 +198,15 @@ function plotman(config: Config = defaultConfig) {
     }
 
     function plotX(x: number | string, data?: any) {
-        const px = typeof x === 'number' ? x : data != null ? get(data, x) : null
+        let px = typeof x === 'number' ? x : data != null ? get(data, x) : null
+        px = xAxis.categories && xAxis.categories.length > 0 ? px + 0.5 : px
         return px != null ? (px * plotW) / xRange : null
     }
 
     function plotY(y: number | string, data?: any) {
-        const py = typeof y === 'number' ? y : data != null ? get(data, y) : null
-        return py != null ? (py * plotH) / yRange : null
+        let py = typeof y === 'number' ? y : data != null ? get(data, y) : null
+        py = yAxis.categories && yAxis.categories.length > 0 ? py + 0.5 : py
+        return py != null ? plotH * (1 - py / yRange) : null
     }
 
     return { config, plot, plotXY, plotX, plotY }
