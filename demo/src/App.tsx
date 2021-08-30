@@ -22,7 +22,7 @@ const data = Array(50)
 // console.log('data')
 // console.log(data)
 const settings1 = { width: 500, height: 800, margin: { top: 80 }, xAxis: { categories }, yAxis: { interval: 20 }, colors, fields: { x: 'cat', y: 'profit', size: 'fruit.price' } }
-const settings2 = { ...settings1, xAxis: { interval: 25 }, fields: { x: 'revenue', y: 'profit', size: 'fruit.price' } }
+const settings2 = { ...settings1, xAxis: { interval: 25, min: -30, max: 120 }, fields: { x: 'revenue', y: 'profit', size: 'fruit.price' } }
 const settings3 = { ...settings1, xAxis: { bins: 10 }, yAxis: { categories }, fields: { x: 'profit', y: 'cat', size: 'fruit.price' } }
 
 function App() {

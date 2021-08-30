@@ -7,8 +7,8 @@ function ScatterPlot({ data, settings }) {
     const { fields } = settings
     const { config, plotXY } = plotman(settings)
     return (
-        <div style={{ ...config.styles.container, background: 'thistleqqq' }}>
-            <div style={{ ...config.styles.xAxis, background: 'bisqueqqq', borderTop: 'solid #000 1px' }}>
+        <div style={{ ...config.styles.container }}>
+            <div style={{ ...config.styles.xAxis, borderTop: 'solid #000 1px' }}>
                 {config.xAxis.ticks.map((item, itemIndex) => {
                     return (
                         <div key={itemIndex} className="position-absolute" style={{ left: item.x + 'px', top: item.y + 'px' }}>
@@ -20,7 +20,7 @@ function ScatterPlot({ data, settings }) {
                     )
                 })}
             </div>
-            <div style={{ ...config.styles.yAxis, background: 'tanqqq', borderRight: 'solid #000 1px' }}>
+            <div style={{ ...config.styles.yAxis, borderRight: 'solid #000 1px' }}>
                 {config.yAxis.ticks.map((item, itemIndex) => {
                     return (
                         <div key={itemIndex} className="position-absolute" style={{ right: item.x + 'px', top: item.y + 'px' }}>
@@ -32,7 +32,7 @@ function ScatterPlot({ data, settings }) {
                     )
                 })}
             </div>
-            <div style={{ ...config.styles.plotArea, background: 'white' }}>
+            <div style={{ ...config.styles.plotArea }}>
                 {data.map((item, itemIndex) => {
                     const point = plotXY(fields.x, fields.y, item)
                     return (

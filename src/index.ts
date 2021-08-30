@@ -2,7 +2,7 @@ import merge from 'ts-deepmerge'
 import get from 'lodash/get'
 import { Properties } from 'csstype'
 
-type Tick = {
+export type Tick = {
     label: string | number
     prefix?: string
     suffix?: string
@@ -10,18 +10,20 @@ type Tick = {
     y: number
 }
 
-type Axis = {
+export type Axis = {
     title?: string
     min: number
     max: number
     tick?: Tick
+    // tickMin?: number
+    // tickMax?: number
     interval?: number
     bins?: number
     categories?: string[]
     ticks?: Tick[]
 }
 
-type Config = {
+export type Config = {
     width: number
     height: number
     margin: {
@@ -152,13 +154,13 @@ function plotman(config: Config = defaultConfig) {
     function plotX(x: number | string, data?: any) {
         let px = typeof x === 'number' ? x : data != null ? get(data, x) : null
         px = xAxis.categories && xAxis.categories.length > 0 ? px + 0.5 : px
-        return px != null ? (px * plotW) / xRange : null
+        return px != null ? ((px - xAxis.min) / xRange) * plotW : null
     }
 
     function plotY(y: number | string, data?: any) {
         let py = typeof y === 'number' ? y : data != null ? get(data, y) : null
         py = yAxis.categories && yAxis.categories.length > 0 ? py + 0.5 : py
-        return py != null ? plotH * (1 - py / yRange) : null
+        return py != null ? plotH * (1 - (py - yAxis.min) / yRange) : null
     }
 
     return { config, plot, plotXY, plotX, plotY }
