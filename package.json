@@ -1,6 +1,6 @@
 {
     "name": "plotman",
-    "version": "0.0.4",
+    "version": "0.0.7",
     "description": "Plotman is a JavaScript library to plot points on x, y plane to create custom charts",
     "main": "dist/index.js",
     "module": "dist/index.es.js",
@@ -8,6 +8,10 @@
         "dist/index.js",
         "dist/index.d.ts"
     ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/samirdamle/plotman.git"
+    },
     "scripts": {
         "build": "rimraf dist && tsc && rollup -c rollup.config.js",
         "lint": "tslint -c tslint.json \"src/**/*.ts\"",
