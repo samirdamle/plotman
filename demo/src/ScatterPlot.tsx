@@ -39,6 +39,7 @@ function ScatterPlot({ data, settings }) {
                         <div
                             key={itemIndex}
                             className="position-absolute"
+                            title={`x: ${get(item, fields.x)}  |  y: ${get(item, fields.y)}  |  z: ${get(item, fields.size)}`}
                             style={{
                                 left: point.x,
                                 top: point.y,
