@@ -96,7 +96,7 @@ function plotman(config: Config = defaultConfig) {
                 }
                 return tick
             })
-        } else if (axis.bins != null) {
+        } else if (axis.bins != null && typeof axis.bins === 'number') {
             axis.ticks = Array(axis.bins + 1)
                 .fill(1)
                 .map((_, binIndex) => {
@@ -163,7 +163,24 @@ function plotman(config: Config = defaultConfig) {
         return py != null ? plotH * (1 - (py - yAxis.min) / yRange) : null
     }
 
-    return { config, plot, plotXY, plotX, plotY }
+    function unplotX(x: number) {
+        let px = x
+        px = xAxis.categories && xAxis.categories.length > 0 ? px - 0.5 : px
+        return px != null ? (px / plotW) * xRange + xAxis.min : null
+    }
+
+    function unplotY(y: number) {
+        let py = y
+        py = yAxis.categories && yAxis.categories.length > 0 ? py - 0.5 : py
+        return py != null ? 1 - (py / plotH) * yRange + yAxis.min : null
+    }
+
+    function unplotXY(x: number, y: number) {
+        const point = { x: unplotX(x), y: unplotY(y) }
+        return point
+    }
+
+    return { config, plot, plotXY, plotX, plotY, unplotX, unplotY, unplotXY }
 }
 
 export { plotman }
