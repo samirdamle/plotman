@@ -6,6 +6,7 @@ export type Tick = {
     label: string | number
     prefix?: string
     suffix?: string
+    value: number
     x: number
     y: number
 }
@@ -91,6 +92,7 @@ function plotman(config: Config = defaultConfig) {
                 const interval = len ? (isX ? plotW : plotH) / len : 1
                 const tick: Tick = {
                     label: cat,
+                    value: catIndex,
                     x: isX ? (catIndex + 0.5) * interval : 0,
                     y: !isX ? plotH - (catIndex + 0.5) * interval : 0,
                 }
@@ -104,26 +106,30 @@ function plotman(config: Config = defaultConfig) {
                     const coord = (isX ? plotX(value) : plotY(value)) || 0
                     const tick: Tick = {
                         label: (axis.tick?.prefix || '') + value + (axis.tick?.suffix || ''),
+                        value,
                         x: isX ? coord : 0,
                         y: !isX ? coord : 0,
                     }
                     return tick
                 })
         } else {
-            const bins = axis.interval ? Math.floor(range / axis.interval) : 2
+            const bins = axis.interval ? Math.ceil(range / axis.interval) : 2
             axis.interval = axis.interval || range / bins || 1
             axis.ticks = Array(bins + 1)
                 .fill(1)
                 .map((_, binIndex) => {
-                    const value = axis.min + binIndex * (axis.interval || 1)
+                    // const value = axis.min + binIndex * (axis.interval || 1)
+                    const value = axis.interval * Math.ceil(axis.min / axis.interval) + binIndex * axis.interval
                     const coord = (isX ? plotX(value) : plotY(value)) || 0
                     const tick: Tick = {
                         label: (axis.tick?.prefix || '') + value + (axis.tick?.suffix || ''),
+                        value,
                         x: isX ? coord : 0,
                         y: !isX ? coord : 0,
                     }
                     return tick
                 })
+                .filter((tick) => tick.value >= axis.min && tick.value <= axis.max)
         }
         return axis
     }
