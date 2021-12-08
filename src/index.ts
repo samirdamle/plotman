@@ -164,7 +164,7 @@ function plotman(config: Config = defaultConfig) {
     }
 
     function plot(data: any[]) {
-        console.log(data)
+        // console.log(data)
     }
 
     function plotXY(x: number | string, y: number | string, data: any) {
@@ -176,10 +176,6 @@ function plotman(config: Config = defaultConfig) {
         let px = typeof x === 'number' ? x : data != null ? get(data, x) : null
         px = xAxis.categories && xAxis.categories.length > 0 ? px + 0.5 : px
         const ratio = !xAxis.categories && xAxis.hasLogScale ? Math.log10(px - xAxis.min) / Math.log10(xRange) : (px - xAxis.min) / xRange
-        // if (true) {
-        //     console.log('======')
-        //     console.log('px = ' + px + ' | ratio = ' + ratio)
-        // }
         return px != null ? ratio * plotW : null
     }
 
@@ -188,10 +184,6 @@ function plotman(config: Config = defaultConfig) {
         py = yAxis.categories && yAxis.categories.length > 0 ? py + 0.5 : py
         const diff = py - yAxis.min
         const ratio = !yAxis.categories && yAxis.hasLogScale ? 1 - (diff === 0 ? diff : Math.log10(Math.abs(diff))) / Math.log10(yRange) : 1 - diff / yRange
-        if (true) {
-            console.log('======')
-            console.log('py = ' + py + ' | ratio = ' + ratio)
-        }
         return py != null ? plotH * ratio : null
     }
 

@@ -23,8 +23,8 @@ const data = Array(50)
 
 const logData = data.map((item) => ({ ...item, revenue: item.revenue * item.revenue, profit: item.profit * item.profit }))
 
-console.log('data')
-console.log(data)
+// console.log('data')
+// console.log(data)
 
 // Categories on X-axis, continuous Y-axis
 const settings1 = {
