@@ -61,10 +61,24 @@ const settings3 = {
 }
 
 // Log scale on X-axis
-const settings4 = { ...settings3, xAxis: { hasLogScale: true, min: 0, max: 10000 }, yAxis: { min: 0, max: 10000 } }
+const settings4 = {
+    ...settings3,
+    xAxis: { hasLogScale: true, min: 0, max: 10000, values: [0, 10, 100, 1000, 10000] },
+    yAxis: { min: 0, max: 10000, values: [0, 2000, 4000, 6000, 8000, 10000] },
+}
 
 // Log scale on Y-axis
-const settings5 = { ...settings3, xAxis: { min: 0, max: 10000 }, yAxis: { hasLogScale: true, min: 0, max: 10000 } }
+const settings5 = {
+    ...settings3,
+    xAxis: { min: 0, max: 10000, bins: 4 },
+    yAxis: { hasLogScale: true, min: 0, max: 10000, bins: 5 },
+}
+
+// Log scale on Y-axis
+const settings6 = {
+    ...settings1,
+    yAxis: { hasLogScale: true, min: 0, max: 10000, bins: 5 },
+}
 
 function App() {
     const { config, plotXY } = plotman({ width: 600, margin: { top: 80 }, xAxis: { categories }, yAxis: { interval: 20 } })
@@ -85,6 +99,9 @@ function App() {
                 </div>
                 <div className="col-4">
                     <ScatterPlot data={logData} settings={settings5} />
+                </div>
+                <div className="col-4">
+                    <ScatterPlot data={logData} settings={settings6} />
                 </div>
             </div>
         </div>

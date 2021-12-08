@@ -20,6 +20,7 @@ export type Axis = {
     // tickMax?: number
     interval?: number
     bins?: number
+    values?: number[]
     categories?: string[]
     ticks?: Tick[]
     hasLogScale: boolean
@@ -115,6 +116,17 @@ function plotman(config: Config = defaultConfig) {
                     }
                     return tick
                 })
+        } else if (axis.values != null && typeof Array.isArray(axis.bins)) {
+            axis.ticks = axis.values.map((value: number) => {
+                const coord = (isX ? plotX(value) : plotY(value)) || 0
+                const tick: Tick = {
+                    label: (axis.tick?.prefix || '') + value + (axis.tick?.suffix || ''),
+                    value,
+                    x: isX ? coord : 0,
+                    y: !isX ? coord : 0,
+                }
+                return tick
+            })
         } else {
             const bins = axis.interval ? Math.ceil(range / axis.interval) : 2
             axis.interval = axis.interval || range / bins || 1
