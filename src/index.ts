@@ -76,18 +76,25 @@ const defaultConfig: Config = {
 function plotman(config: Config = defaultConfig) {
     config = merge(defaultConfig, config)
     let { width, height, margin, xAxis, yAxis } = config
+
     if (xAxis.categories && xAxis.categories.length > 0) {
         xAxis.min = 0
         xAxis.max = xAxis.categories.length
     }
+
     if (yAxis.categories && yAxis.categories.length > 0) {
         yAxis.min = 0
         yAxis.max = yAxis.categories.length
     }
-    const xRange = Math.abs(xAxis.max - xAxis.min)
-    const yRange = Math.abs(yAxis.max - yAxis.min)
-    const plotW = width - margin.left - margin.right
-    const plotH = height - margin.top - margin.bottom
+
+    let xRange = Math.abs(xAxis.max - xAxis.min)
+    xRange = xRange === 0 ? Number.EPSILON : xRange
+
+    let yRange = Math.abs(yAxis.max - yAxis.min)
+    yRange = yRange === 0 ? Number.EPSILON : yRange
+
+    const plotW = Math.abs(width - margin.left - margin.right)
+    const plotH = Math.abs(height - margin.top - margin.bottom)
 
     function setTicks(axis: any, range: number, isX: boolean) {
         if (axis.categories && axis.categories.length > 0) {
@@ -164,7 +171,7 @@ function plotman(config: Config = defaultConfig) {
     }
 
     function plot(data: any[]) {
-        // console.log(data)
+        console.log(data)
     }
 
     function plotXY(x: number | string, y: number | string, data: any) {
@@ -175,7 +182,14 @@ function plotman(config: Config = defaultConfig) {
     function plotX(x: number | string, data?: any) {
         let px = typeof x === 'number' ? x : data != null ? get(data, x) : null
         px = xAxis.categories && xAxis.categories.length > 0 ? px + 0.5 : px
-        const ratio = !xAxis.categories && xAxis.hasLogScale ? Math.log10(px - xAxis.min) / Math.log10(xRange) : (px - xAxis.min) / xRange
+        let ratio
+        if (!xAxis.categories && xAxis.hasLogScale) {
+            const log10XRange = xRange !== 1 ? Math.log10(xRange) : Number.EPSILON
+            ratio = Math.log10(px - xAxis.min) / log10XRange
+        } else {
+            ratio = (px - xAxis.min) / xRange
+        }
+        // const ratio = !xAxis.categories && xAxis.hasLogScale ? Math.log10(px - xAxis.min) / Math.log10(xRange) : (px - xAxis.min) / xRange
         return px != null ? ratio * plotW : null
     }
 
@@ -183,7 +197,14 @@ function plotman(config: Config = defaultConfig) {
         let py = typeof y === 'number' ? y : data != null ? get(data, y) : null
         py = yAxis.categories && yAxis.categories.length > 0 ? py + 0.5 : py
         const diff = py - yAxis.min
-        const ratio = !yAxis.categories && yAxis.hasLogScale ? 1 - (diff === 0 ? diff : Math.log10(Math.abs(diff))) / Math.log10(yRange) : 1 - diff / yRange
+        let ratio
+        if (!yAxis.categories && yAxis.hasLogScale) {
+            const log10YRange = yRange !== 1 ? Math.log10(yRange) : Number.EPSILON
+            ratio = 1 - (diff === 0 ? diff : Math.log10(Math.abs(diff))) / log10YRange
+        } else {
+            ratio = 1 - diff / yRange
+        }
+        // const ratio = !yAxis.categories && yAxis.hasLogScale ? 1 - (diff === 0 ? diff : Math.log10(Math.abs(diff))) / Math.log10(yRange) : 1 - diff / yRange
         return py != null ? plotH * ratio : null
     }
 
