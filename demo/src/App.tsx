@@ -40,8 +40,8 @@ const settings1 = {
     xAxis: { categories },
     yAxis: {
         interval: 20,
-        // min: Math.min(...data.map((point) => point.profit)),
-        min: 0,
+        min: Math.min(...data.map((point) => point.profit)),
+        // min: 0,
         max: Math.max(...data.map((point) => point.profit)),
     },
     colors,
