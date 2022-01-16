@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './app.scss'
-import { plotman } from 'plotman'
+// import { plotman } from 'plotman'
 import ScatterPlot from './ScatterPlot'
 
 const screenWidth = window.innerWidth
@@ -98,7 +98,7 @@ const settings6 = {
 }
 
 function App() {
-    const { config, plotXY } = plotman({ width: 600, margin: { top: 80 }, xAxis: { categories }, yAxis: { interval: 20 } })
+    // const { config, plotXY } = plotman({ width: 600, margin: { top: 80 }, xAxis: { categories }, yAxis: { interval: 20 } })
     return (
         <div className="app" style={{ paddingTop: '20px' }}>
             <div className="">
