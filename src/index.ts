@@ -52,6 +52,14 @@ export type Config = {
     }
 }
 
+export type PlotOptions = {
+    x: string | number
+    y: string | number
+    z: string | number
+    appendToOriginalObject?: boolean
+    returnAsObjects?: boolean
+}
+
 const defaultConfig: Config = {
     width: 800,
     height: 800,
@@ -170,8 +178,44 @@ function plotman(config: Config = defaultConfig) {
         },
     }
 
-    function plot(data: any[]) {
-        console.log(data)
+    function plot(data: any[], options: PlotOptions) {
+        const { x, y, z, appendToOriginalObject, returnAsObjects } = options ?? {}
+        let plottedData
+        if (data && Array.isArray(data)) {
+            if (data.every((item) => typeof item === 'number')) {
+                // data is an array of numbers, each of which is a yValue
+                plottedData = data.map((item) => (x ? plotX(item) : plotY(item)))
+            } else if (data.every((item) => Array.isArray(item) || item == null)) {
+                // data is an array of arrays of shape: [xValue, yValue, zValue]
+                plottedData = data.map((item) => {
+                    let arr = null
+                    if (item != null) {
+                        arr = [plotX(item[0])]
+                        if (item.length > 1) {
+                            arr.push(plotY(item[1]))
+                        }
+                        if (item.length > 2) {
+                            arr.push(item[2])
+                        }
+                    }
+                    return arr
+                })
+            } else if (data.every((item) => typeof item === 'object' || item == null)) {
+                // data is an array of objects of shape: { [x]: xValue, [y]: yValue, [z]: zValue }
+                if (appendToOriginalObject) {
+                    plottedData = data.map((item) => ({ ...item, plotman: { x: plotX(x, item), y: plotY(y, item), z: get(item, z) } }))
+                } else if (returnAsObjects) {
+                    plottedData = data.map((item) => ({ x: plotX(x, item), y: plotY(y, item), z: get(item, z) }))
+                } else {
+                    plottedData = data.map((item) => [plotX(x, item), plotY(y, item), get(item, z)])
+                }
+            } else {
+                throw new Error('Plotman plot() method did not receive a valid - A. array of arrays or B. array of objects - as the first argument.')
+            }
+        } else {
+            throw new Error('Plotman plot() method did not receive a valid array as the first argument.')
+        }
+        return plottedData
     }
 
     function plotXY(x: number | string, y: number | string, data: any) {
@@ -181,7 +225,7 @@ function plotman(config: Config = defaultConfig) {
 
     function plotX(x: number | string, data?: any) {
         let px = typeof x === 'number' ? x : data != null ? get(data, x) : null
-        px = xAxis.categories && xAxis.categories.length > 0 ? px + 0.5 : px
+        px = px != null && xAxis.categories && xAxis.categories.length > 0 ? px + 0.5 : px
         let ratio
         if (!xAxis.categories && xAxis.hasLogScale) {
             const log10XRange = xRange !== 1 ? Math.log10(xRange) : Number.EPSILON
@@ -195,7 +239,7 @@ function plotman(config: Config = defaultConfig) {
 
     function plotY(y: number | string, data?: any) {
         let py = typeof y === 'number' ? y : data != null ? get(data, y) : null
-        py = yAxis.categories && yAxis.categories.length > 0 ? py + 0.5 : py
+        py = py != null && yAxis.categories && yAxis.categories.length > 0 ? py + 0.5 : py
         const diff = py - yAxis.min
         let ratio
         if (!yAxis.categories && yAxis.hasLogScale) {
