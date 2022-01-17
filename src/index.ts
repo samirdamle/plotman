@@ -252,16 +252,59 @@ function plotman(config: Config = defaultConfig) {
         return py != null ? plotH * ratio : null
     }
 
+    function unplot(points: any[], options: any) {
+        console.log('%c yAxis.categories', 'color: lime')
+        console.log(yAxis.categories)
+        const { x } = options ?? {}
+        let data
+        if (Array.isArray(points)) {
+            if (points.every((point) => typeof point === 'number' || point == null)) {
+                data = points.map((point) => (x ? unplotX(point) : unplotY(point)))
+            } else if (points.every((point) => Array.isArray(point) || point == null)) {
+                // points is an array of arrays of shape [xCoordinate, yCoordinate, zCoordinate] where coordinates can be null
+                data = points.map((point) => {
+                    let arr = null
+                    if (point != null) {
+                        arr = [unplotX(point[0])]
+                        if (point.length > 1) {
+                            arr.push(unplotY(point[1]))
+                        }
+                        if (point.length > 2) {
+                            arr.push(point[2])
+                        }
+                        return arr
+                    }
+                    return point
+                })
+            } else if (points.every((point) => typeof point === 'object' || point == null)) {
+                // points is an array of objects {x: xCoordinate, y: yCoordinate, z: zCoordinate} where coordinates can be null
+                data = points.map((point) => (point != null ? [unplotX(point.x), unplotY(point.y), point.z] : null))
+            } else {
+                throw new Error('Plotman unplot() method did not receive a valid - A. array of arrays or B. array of objects - as the first argument.')
+            }
+            return data
+        } else {
+            throw new Error('Plotman unplot() method did not receive a valid array as the first argument.')
+        }
+    }
+
     function unplotX(x: number) {
-        let px = x
-        px = xAxis.categories && xAxis.categories.length > 0 ? px - 0.5 : px
-        return px != null ? (px / plotW) * xRange + xAxis.min : null
+        let px: number | null = x
+        const hasCategories = xAxis.categories && xAxis.categories.length > 0
+        // px = xAxis.categories && xAxis.categories.length > 0 ? px - 0.5 : px
+        px = px != null ? (px / plotW) * xRange + xAxis.min : null
+        px = hasCategories && px != null ? Math.abs(Math.round(px - 0.5)) : px
+        return px
     }
 
     function unplotY(y: number) {
-        let py = y
-        py = yAxis.categories && yAxis.categories.length > 0 ? py - 0.5 : py
-        return py != null ? 1 - (py / plotH) * yRange + yAxis.min : null
+        let py: number | null = y
+        // py = yAxis.categories && yAxis.categories.length > 0 ? py - 0.5 : py
+        const hasCategories = yAxis.categories && yAxis.categories.length > 0
+        // return py != null ? 1 - (py / plotH) * yRange + yAxis.min : null
+        py = py != null ? (py / plotH) * yRange + yAxis.min : null
+        py = hasCategories && py != null ? Math.abs(Math.round(py - 0.5)) : py
+        return py
     }
 
     function unplotXY(x: number, y: number) {
@@ -269,7 +312,7 @@ function plotman(config: Config = defaultConfig) {
         return point
     }
 
-    return { config, plot, plotXY, plotX, plotY, unplotX, unplotY, unplotXY }
+    return { config, plot, plotXY, plotX, plotY, unplot, unplotX, unplotY, unplotXY }
 }
 
 export { plotman }
