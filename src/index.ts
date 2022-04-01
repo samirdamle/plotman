@@ -253,8 +253,6 @@ function plotman(config: Config = defaultConfig) {
     }
 
     function unplot(points: any[], options: any) {
-        console.log('%c yAxis.categories', 'color: lime')
-        console.log(yAxis.categories)
         const { x } = options ?? {}
         let data
         if (Array.isArray(points)) {
