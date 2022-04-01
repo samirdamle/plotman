@@ -5,40 +5,61 @@ import get from 'lodash/get'
 function ScatterPlot({ data, settings }) {
     const { colors } = settings || ['red', 'blue', 'green', 'violet']
     const { fields } = settings
-    const { config, plotXY, plot } = plotman(settings)
+    const { config, plotXY, plot, unplot } = plotman(settings)
 
+    console.log('%c config', 'color: red')
+    console.log(config)
+
+    let plottedDataOfNumbers, plottedDataOfArrays, plottedDataOfObjects
     function tryOutPlot() {
         console.log('%c ============================', 'color: orange')
         console.log('fields', fields)
 
-        const plottedData = plot(data, {
+        plottedDataOfNumbers = plot(data.map((item) => item[fields.y]))
+        console.log('%c data as array of numbers', 'color: cyan')
+        console.log(plottedDataOfNumbers)
+
+        // Test cases for null value check for x, y, z
+        plottedDataOfArrays = plot(data.map((item) => [item[fields.x], item[fields.y], get(item, fields.size)])) // none of x, y, z are null
+        // plottedDataOfArrays = plot(data.map((item) => [item[fields.x], item[fields.y], null]))                // z is null
+        // plottedDataOfArrays = plot(data.map((item) => [item[fields.x], item[fields.y]]))                      // x and y only
+        // plottedDataOfArrays = plot(data.map((item) => [item[fields.x]]))                                      // x only
+        // plottedDataOfArrays = plot(data.map((item) => [item[fields.x], null, null]))                          // y and z are null
+        // plottedDataOfArrays = plot(data.map((item) => [null, null, null]))                                    // x, y, z are null
+        // plottedDataOfArrays = plot(data.map((item) => null))                                                  // all items are null
+
+        console.log('%c data as array of arrays', 'color: yellow')
+        console.log(plottedDataOfArrays)
+
+        plottedDataOfObjects = plot(data, {
             x: fields.x,
             y: fields.y,
             z: fields.size,
             // appendToOriginalObject: true,
-            // returnAsObjects: true,
+            returnAsObjects: true,
         })
 
         console.log('%c data as array of objects', 'color: lime')
-        console.log(plottedData)
-
-        // Test cases for null value check for x, y, z
-        const plottedData2 = plot(data.map((item) => [item[fields.x], item[fields.y], get(item, fields.size)])) // none of x, y, z are null
-        // const plottedData2 = plot(data.map((item) => [item[fields.x], item[fields.y], null]))                // z is null
-        // const plottedData2 = plot(data.map((item) => [item[fields.x], item[fields.y]]))                      // x and y only
-        // const plottedData2 = plot(data.map((item) => [item[fields.x]]))                                      // x only
-        // const plottedData2 = plot(data.map((item) => [item[fields.x], null, null]))                          // y and z are null
-        // const plottedData2 = plot(data.map((item) => [null, null, null]))                                    // x, y, z are null
-        // const plottedData2 = plot(data.map((item) => null))                                                  // all items are null
-
-        console.log('%c data as array of arrays', 'color: yellow')
-        console.log(plottedData2)
-
-        const plottedData3 = plot(data.map((item) => item[fields.y]))
-        console.log('%c data as array of numbers', 'color: cyan')
-        console.log(plottedData3)
+        console.log(plottedDataOfObjects)
     }
     tryOutPlot()
+
+    let dataOfNumbers, dataOfArrays, dataOfObjects
+    function tryOutUnplot() {
+        console.log('>>>>>>>>>>>>>>>>>>>')
+        dataOfNumbers = unplot(plottedDataOfNumbers)
+        console.log('%c dataOfNumbers', 'color: lime')
+        console.log(dataOfNumbers)
+
+        dataOfArrays = unplot(plottedDataOfArrays)
+        console.log('%c dataOfArrays', 'color: pink')
+        console.log(dataOfArrays)
+
+        dataOfObjects = unplot(plottedDataOfObjects)
+        console.log('%c dataOfObjects', 'color: orange')
+        console.log(dataOfObjects)
+    }
+    tryOutUnplot()
 
     return (
         <div>
