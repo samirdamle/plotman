@@ -82,6 +82,8 @@ const defaultConfig: Config = {
 }
 
 function plotman(config: Config = defaultConfig) {
+    config.margin = config.margin ?? { top: 0, bottom: 0, left: 0, right: 0 }
+
     config = merge(defaultConfig, config)
     let { width, height, margin, xAxis, yAxis } = config
 
@@ -186,13 +188,13 @@ function plotman(config: Config = defaultConfig) {
                 // data is an array of numbers, each of which is a yValue
                 plottedData = data.map((item) => (x ? plotX(item) : plotY(item)))
             } else if (data.every((item) => Array.isArray(item) || item == null)) {
-                // data is an array of arrays of shape: [xValue, yValue, zValue]
+                // data is an array of arrays of shape: [xValue, yValue, zValue] where xValue, yValue, zValue are number | number[]
                 plottedData = data.map((item) => {
-                    let arr = null
+                    let arr: any[] | null = null
                     if (item != null) {
-                        arr = [plotX(item[0])]
+                        arr = [Array.isArray(item[0]) ? item[0].map((val) => plotX(val)) : plotX(item[0])]
                         if (item.length > 1) {
-                            arr.push(plotY(item[1]))
+                            Array.isArray(item[1]) ? arr.push(item[1].map((val) => plotY(val))) : arr.push(plotY(item[1]))
                         }
                         if (item.length > 2) {
                             arr.push(item[2])
@@ -202,6 +204,7 @@ function plotman(config: Config = defaultConfig) {
                 })
             } else if (data.every((item) => typeof item === 'object' || item == null)) {
                 // data is an array of objects of shape: { [x]: xValue, [y]: yValue, [z]: zValue }
+                // e.g. [ { cost: 3, price: 4, qty: 5 } ] where in options.x === 'cost', options.y === 'price' and options.z === 'qty'
                 if (appendToOriginalObject) {
                     plottedData = data.map((item) => ({ ...item, plotman: { x: plotX(x, item), y: plotY(y, item), z: get(item, z) } }))
                 } else if (returnAsObjects) {

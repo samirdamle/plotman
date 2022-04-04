@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './app.scss'
 // import { plotman } from 'plotman'
+import VariousPlots from './VariousPlots'
 import ScatterPlot from './ScatterPlot'
 
 const screenWidth = window.innerWidth
@@ -102,41 +103,49 @@ function App() {
     return (
         <div className="app" style={{ paddingTop: '20px' }}>
             <div className="">
-                <h1>Examples of Bubble Charts with various settings</h1>
-                <br />
-            </div>
-            <div className="row">
-                <div className="col-lg-6 col-xl-4">
-                    <div className="box">
-                        <ScatterPlot data={data} settings={settings1} />
-                    </div>
-                </div>
-                <div className="col-lg-6 col-xl-4">
-                    <div className="box">
-                        <ScatterPlot data={data} settings={settings2} />
-                    </div>
-                </div>
-                <div className="col-lg-6 col-xl-4">
-                    <div className="box">
-                        <ScatterPlot data={data} settings={settings3} />
-                    </div>
-                </div>
-                <div className="col-lg-6 col-xl-4">
-                    <div className="box">
-                        <ScatterPlot data={logData} settings={settings4} />
-                    </div>
-                </div>
-                <div className="col-lg-6 col-xl-4">
-                    <div className="box">
-                        <ScatterPlot data={logData} settings={settings5} />
-                    </div>
-                </div>
-                <div className="col-lg-6 col-xl-4">
-                    <div className="box">
-                        <ScatterPlot data={logData} settings={settings6} />
-                    </div>
+                <h1>Examples of various plots with minimal config</h1>
+                <div className="">
+                    <VariousPlots />
                 </div>
             </div>
+            {/* <div className="">
+                <div className="">
+                    <h1>Examples of Bubble Chart with various settings</h1>
+                    <br />
+                </div>
+                <div className="row">
+                    <div className="col-lg-6 col-xl-4">
+                        <div className="box">
+                            <ScatterPlot data={data} settings={settings1} />
+                        </div>
+                    </div>
+                    <div className="col-lg-6 col-xl-4">
+                        <div className="box">
+                            <ScatterPlot data={data} settings={settings2} />
+                        </div>
+                    </div>
+                    <div className="col-lg-6 col-xl-4">
+                        <div className="box">
+                            <ScatterPlot data={data} settings={settings3} />
+                        </div>
+                    </div>
+                    <div className="col-lg-6 col-xl-4">
+                        <div className="box">
+                            <ScatterPlot data={logData} settings={settings4} />
+                        </div>
+                    </div>
+                    <div className="col-lg-6 col-xl-4">
+                        <div className="box">
+                            <ScatterPlot data={logData} settings={settings5} />
+                        </div>
+                    </div>
+                    <div className="col-lg-6 col-xl-4">
+                        <div className="box">
+                            <ScatterPlot data={logData} settings={settings6} />
+                        </div>
+                    </div>
+                </div>
+            </div> */}
         </div>
     )
 }
