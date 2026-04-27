@@ -23,8 +23,9 @@
         "strict": true,
         "resolveJsonModule": true,
         "isolatedModules": false,
-        "noEmit": true
+        "noEmit": true,
+        "types": []
     },
     "include": ["src"],
-    "exclude": ["node_modules", "build", "dist", "example", "rollup.config.js"]
+    "exclude": ["node_modules", "build", "dist", "example", "rollup.config.js", "src/**/*.test.ts"]
 }

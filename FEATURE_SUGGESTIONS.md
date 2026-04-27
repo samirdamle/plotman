@@ -8,7 +8,7 @@ The existing philosophy — *"Plotman gives you coordinates, you render the char
 
 ## Tier 1 — High impact, low effort
 
-### 1. Auto-scale axes from data (`auto: true` or `min: 'auto'`)
+### 1. Auto-scale axes from data (`auto: true` or `min: 'auto'`) ✅ shipped
 
 **Why:** Today, every consumer writes `Math.min(...data.map(...))` / `Math.max(...)`. That's boilerplate developers have to rewrite every time.
 
@@ -17,12 +17,12 @@ The existing philosophy — *"Plotman gives you coordinates, you render the char
 ```ts
 xAxis: { auto: true, pad: 0.05 }           // 5% padding on both sides
 yAxis: { min: 'auto', max: 'auto' }        // equivalent, per-side
-yAxis: { min: 0, max: 'auto', nice: true } // "nice" rounding to 10/25/50/100
+yAxis: { min: 0, max: 'auto' }             // mix fixed and auto
 ```
 
-Pair with a `plot(data, { x, y, autoFit: true })` shortcut that calls the factory internally and returns `{ config, points }`.
+The factory now takes optional `data` and `options` arguments: `plotman(config, data, options)`. When any axis opts in via `auto`/`'auto'`, bounds are derived from the data at construction time. See the "Auto-scale axes from data" cookbook recipe in `DOCUMENTATION.md`.
 
-**Implementation hint:** compute during `plotman()` construction — if `min`/`max` is `'auto'` or `auto: true` is set, require the user to pass a `data` array to the factory (or expose a `plotmanFromData(data, options)` helper).
+Still open as a follow-up: `nice: true` rounding (covered separately in #2 below) and a `plot(data, { autoFit: true })` shortcut.
 
 ---
 

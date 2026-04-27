@@ -16,7 +16,8 @@
         "build": "rimraf dist && tsc && rollup -c rollup.config.js",
         "lint": "tslint -c tslint.json \"src/**/*.ts\"",
         "lint:fix": "tslint --fix -c tslint.json \"src/**/*.ts\"",
-        "test": "test"
+        "test": "vitest run",
+        "test:watch": "vitest"
     },
     "keywords": [
         "plot",
@@ -40,7 +41,8 @@
         "rollup-plugin-terser": "^7.0.2",
         "rollup-plugin-typescript2": "^0.30.0",
         "rollup-plugin-url": "^2.1.0",
-        "typescript": "^4.3.5"
+        "typescript": "^4.3.5",
+        "vitest": "^1.6.0"
     },
     "dependencies": {
         "lodash": "^4.17.21",

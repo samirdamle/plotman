@@ -11,10 +11,14 @@ export type Tick = {
     y: number
 }
 
+export type AxisBound = number | 'auto'
+
 export type Axis = {
     title?: string
-    min: number
-    max: number
+    min: AxisBound
+    max: AxisBound
+    auto?: boolean
+    pad?: number
     tick?: Tick
     // tickMin?: number
     // tickMax?: number
@@ -81,8 +85,87 @@ const defaultConfig: Config = {
     },
 }
 
-function plotman(config: Config = defaultConfig) {
-    config = merge(defaultConfig, config)
+function extractAxisValues(data: any[], plotOptions: PlotOptions | undefined, which: 'x' | 'y'): number[] {
+    if (!Array.isArray(data) || data.length === 0) return []
+    const sample = data.find((d) => d != null)
+    if (sample == null) return []
+
+    if (typeof sample === 'number') {
+        // shape 1: number[] — Y values are the array, X values are indices
+        if (which === 'y') {
+            return data.filter((v): v is number => typeof v === 'number')
+        }
+        return data.map((_, i) => i)
+    }
+    if (Array.isArray(sample)) {
+        // shape 2: [x, y, z?]
+        const idx = which === 'x' ? 0 : 1
+        return data
+            .filter((item) => Array.isArray(item) && typeof item[idx] === 'number')
+            .map((item) => item[idx])
+    }
+    if (typeof sample === 'object') {
+        // shape 3: object[]
+        const path = plotOptions ? (which === 'x' ? plotOptions.x : plotOptions.y) : undefined
+        if (path == null) return []
+        return data
+            .map((item) => (item != null ? get(item, path as any) : undefined))
+            .filter((v): v is number => typeof v === 'number' && !Number.isNaN(v))
+    }
+    return []
+}
+
+function getDataBounds(values: number[], hasLogScale: boolean): { min: number; max: number } | null {
+    const filtered = hasLogScale ? values.filter((v) => v > 0) : values
+    if (filtered.length === 0) return null
+    let min = filtered[0]
+    let max = filtered[0]
+    for (const v of filtered) {
+        if (v < min) min = v
+        if (v > max) max = v
+    }
+    return { min, max }
+}
+
+function resolveAuto(axis: Axis, which: 'x' | 'y', data: any[] | undefined, plotOptions: PlotOptions | undefined) {
+    const wantsAuto = axis.auto === true || axis.min === 'auto' || axis.max === 'auto'
+    if (!wantsAuto) return
+    if (axis.categories && axis.categories.length > 0) return // categoricals already drove min/max
+
+    if (!data) {
+        throw new Error(
+            `plotman: ${which}Axis requested auto-scaling but no data was passed. Call plotman(config, data, options).`,
+        )
+    }
+    const values = extractAxisValues(data, plotOptions, which)
+    const bounds = getDataBounds(values, axis.hasLogScale)
+    if (!bounds) {
+        throw new Error(
+            `plotman: ${which}Axis auto-scaling found no usable numeric values` +
+                (axis.hasLogScale ? ' (log scale requires positive values).' : '.'),
+        )
+    }
+    let { min: dMin, max: dMax } = bounds
+    if (dMin === dMax) {
+        const spread = dMin === 0 ? 1 : Math.abs(dMin) * 0.1
+        dMin -= spread / 2
+        dMax += spread / 2
+    }
+    const pad = typeof axis.pad === 'number' ? axis.pad : 0
+    const padAmount = (dMax - dMin) * pad
+
+    const wantMin = axis.auto === true || axis.min === 'auto'
+    const wantMax = axis.auto === true || axis.max === 'auto'
+    if (wantMin) axis.min = dMin - padAmount
+    if (wantMax) axis.max = dMax + padAmount
+
+    if (axis.hasLogScale && (axis.min as number) <= 0) {
+        throw new Error(`plotman: ${which}Axis log scale requires min > 0`)
+    }
+}
+
+function plotman(config: Config = defaultConfig, data?: any[], plotOptions?: PlotOptions) {
+    config = merge(defaultConfig, config) as Config
     let { width, height, margin, xAxis, yAxis } = config
 
     if (xAxis.categories && xAxis.categories.length > 0) {
@@ -95,10 +178,13 @@ function plotman(config: Config = defaultConfig) {
         yAxis.max = yAxis.categories.length
     }
 
-    let xRange = Math.abs(xAxis.max - xAxis.min)
+    resolveAuto(xAxis, 'x', data, plotOptions)
+    resolveAuto(yAxis, 'y', data, plotOptions)
+
+    let xRange = Math.abs((xAxis.max as number) - (xAxis.min as number))
     xRange = xRange === 0 ? Number.EPSILON : xRange
 
-    let yRange = Math.abs(yAxis.max - yAxis.min)
+    let yRange = Math.abs((yAxis.max as number) - (yAxis.min as number))
     yRange = yRange === 0 ? Number.EPSILON : yRange
 
     const plotW = Math.abs(width - margin.left - margin.right)
@@ -229,9 +315,9 @@ function plotman(config: Config = defaultConfig) {
         let ratio
         if (!xAxis.categories && xAxis.hasLogScale) {
             const log10XRange = xRange !== 1 ? Math.log10(xRange) : Number.EPSILON
-            ratio = Math.log10(px - xAxis.min) / log10XRange
+            ratio = Math.log10(px - (xAxis.min as number)) / log10XRange
         } else {
-            ratio = (px - xAxis.min) / xRange
+            ratio = (px - (xAxis.min as number)) / xRange
         }
         // const ratio = !xAxis.categories && xAxis.hasLogScale ? Math.log10(px - xAxis.min) / Math.log10(xRange) : (px - xAxis.min) / xRange
         return px != null ? ratio * plotW : null
@@ -240,7 +326,7 @@ function plotman(config: Config = defaultConfig) {
     function plotY(y: number | string, data?: any) {
         let py = typeof y === 'number' ? y : data != null ? get(data, y) : null
         py = py != null && yAxis.categories && yAxis.categories.length > 0 ? py + 0.5 : py
-        const diff = py - yAxis.min
+        const diff = py - (yAxis.min as number)
         let ratio
         if (!yAxis.categories && yAxis.hasLogScale) {
             const log10YRange = yRange !== 1 ? Math.log10(yRange) : Number.EPSILON
@@ -290,7 +376,7 @@ function plotman(config: Config = defaultConfig) {
         let px: number | null = x
         const hasCategories = xAxis.categories && xAxis.categories.length > 0
         // px = xAxis.categories && xAxis.categories.length > 0 ? px - 0.5 : px
-        px = px != null ? (px / plotW) * xRange + xAxis.min : null
+        px = px != null ? (px / plotW) * xRange + (xAxis.min as number) : null
         px = hasCategories && px != null ? Math.abs(Math.round(px - 0.5)) : px
         return px
     }
@@ -300,7 +386,7 @@ function plotman(config: Config = defaultConfig) {
         // py = yAxis.categories && yAxis.categories.length > 0 ? py - 0.5 : py
         const hasCategories = yAxis.categories && yAxis.categories.length > 0
         // return py != null ? 1 - (py / plotH) * yRange + yAxis.min : null
-        py = py != null ? (py / plotH) * yRange + yAxis.min : null
+        py = py != null ? (py / plotH) * yRange + (yAxis.min as number) : null
         py = hasCategories && py != null ? Math.abs(Math.round(py - 0.5)) : py
         return py
     }

@@ -152,9 +152,11 @@ That's the whole mental model: call `plotman()`, call `plot()`, render whatever 
 
 ## API reference
 
-### `plotman(config?: Config)` → factory
+### `plotman(config?: Config, data?: any[], options?: PlotOptions)` → factory
 
 Creates a plotter. If no config is passed, defaults to an 800×800 chart with a `0–100` linear axis on both X and Y.
+
+`data` and `options` are only required when an axis has opted into **auto-scaling** (`auto: true`, `min: 'auto'`, or `max: 'auto'`). They use the same shapes that `plot()` accepts (number array, tuple array, or object array with field paths). When no axis requests auto-scaling, both arguments are ignored.
 
 Returns:
 
@@ -255,8 +257,10 @@ After construction, Plotman also populates:
 
 | Field | Type | Description |
 | ----- | ---- | ----------- |
-| `min` | `number` | Axis minimum (required unless `categories` is set). |
-| `max` | `number` | Axis maximum (required unless `categories` is set). |
+| `min` | `number \| 'auto'` | Axis minimum (required unless `categories` is set). Pass `'auto'` to derive from data. |
+| `max` | `number \| 'auto'` | Axis maximum (required unless `categories` is set). Pass `'auto'` to derive from data. |
+| `auto` | `boolean` | Shorthand for `min: 'auto', max: 'auto'`. Resolves both bounds from the data passed to the factory. |
+| `pad` | `number` | Fraction of the data range to add as padding on each auto-resolved side (e.g. `0.05` = 5%). Defaults to `0`. |
 | `title` | `string` | Optional label. |
 | `hasLogScale` | `boolean` | Use log10 scale instead of linear. |
 | `interval` | `number` | Distance between auto-generated ticks. |
@@ -476,7 +480,42 @@ plotAreaEl.addEventListener('click', e => {
 })
 ```
 
-### 8. Canvas rendering
+### 8. Auto-scale axes from data
+
+Skip the `Math.min(...)`/`Math.max(...)` boilerplate by letting Plotman derive bounds at construction time. Pass your data to the factory; any axis with `auto: true` (or `min: 'auto'` / `max: 'auto'`) is resolved against it.
+
+```ts
+const sales = [
+    { month: 'Jan', value: 40 },
+    { month: 'Feb', value: 72 },
+    { month: 'Mar', value: 55 },
+    { month: 'Apr', value: 91 },
+]
+
+const { plotX, plotY } = plotman(
+    {
+        width: 500,
+        height: 300,
+        margin: { top: 20, right: 20, bottom: 40, left: 50 },
+        xAxis: { categories: sales.map(s => s.month) },
+        yAxis: { auto: true, pad: 0.05, hasLogScale: false },  // 5% headroom
+    },
+    sales,
+    { x: 'month', y: 'value', z: '' },
+)
+```
+
+Three equivalent forms:
+
+```ts
+yAxis: { auto: true, hasLogScale: false }                     // both sides from data
+yAxis: { min: 'auto', max: 'auto', hasLogScale: false }       // same, per-side
+yAxis: { min: 0, max: 'auto', hasLogScale: false }            // fix one, derive the other
+```
+
+`pad` is a fraction of the data range and applies only to auto-resolved sides — `{ min: 0, max: 'auto', pad: 0.1 }` leaves `min: 0` untouched and adds 10% to the top.
+
+### 9. Canvas rendering
 
 ```ts
 const canvas = document.querySelector('canvas')
@@ -539,6 +578,8 @@ The factory is fully typed; `plot()` accepts `any[]` because it supports three d
 - **Categorical `plotX` returns a weird number** — pass the category *index* (not the string), or put the index on the data object and name that property in `PlotOptions.x`.
 - **Log scale with `min: 0`** — `log10(0)` is `-Infinity`. Prefer `min: 1` (or the smallest meaningful positive value) for log axes.
 - **Ticks look empty** — make sure at least one of `interval`, `bins`, `values`, or `categories` is set, or rely on the default fallback (2 ticks).
+- **`auto-scaling but no data was passed`** — when an axis uses `auto: true` (or `'auto'` bounds), pass your data as the second argument to `plotman()`, plus the `PlotOptions` field paths for object-shaped data.
+- **Auto + log scale** — non-positive values are filtered out before computing bounds (log scale requires positive values). If every value is `≤ 0` the factory throws.
 
 ---
 

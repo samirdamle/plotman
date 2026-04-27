@@ -2,6 +2,13 @@
 
 Plotman is a tiny, framework-agnostic library for building **custom charts**. It doesn't draw charts for you — it turns your data into pixel coordinates so you can render them any way you like (DOM, SVG, Canvas, WebGL, React, Vue, Svelte, vanilla JS).
 
+Highlights:
+
+- **Auto-scale axes** — `{ auto: true }` (or `min: 'auto'`) and Plotman derives bounds from your data.
+- **Three input shapes** — number arrays, `[x, y, z]` tuples, or object arrays with dot-notation field paths.
+- **Categorical, linear, log, binned axes** — pick the one that matches your data.
+- **Reverse mapping** — `unplot()` turns mouse coordinates back into data values.
+
 ## Installation
 
 ```bash
@@ -15,7 +22,14 @@ import { plotman } from 'plotman'
 ## Quick example
 
 ```ts
-const { config, plot } = plotman({
+const data = [
+    { hours: 1, score: 52 },
+    { hours: 3, score: 72 },
+    { hours: 5, score: 89 },
+]
+
+// Either fix the bounds yourself…
+const { plot } = plotman({
     width: 400,
     height: 300,
     margin: { top: 20, right: 20, bottom: 40, left: 40 },
@@ -23,10 +37,20 @@ const { config, plot } = plotman({
     yAxis: { min: 0, max: 100, interval: 25 },
 })
 
-const points = plot(
-    [{ hours: 1, score: 52 }, { hours: 3, score: 72 }, { hours: 5, score: 89 }],
-    { x: 'hours', y: 'score', returnAsObjects: true }
+// …or let Plotman scale them from the data:
+const auto = plotman(
+    {
+        width: 400,
+        height: 300,
+        margin: { top: 20, right: 20, bottom: 40, left: 40 },
+        xAxis: { auto: true, hasLogScale: false },
+        yAxis: { auto: true, pad: 0.05, hasLogScale: false },
+    },
+    data,
+    { x: 'hours', y: 'score', z: '' },
 )
+
+const points = plot(data, { x: 'hours', y: 'score', returnAsObjects: true })
 // -> [{ x, y, z }, ...] pixel coordinates you can render with any technology
 ```
 
