@@ -15,7 +15,7 @@ describe('auto-scale axes', () => {
     it('applies pad as a fraction of the data range on auto sides', () => {
         const data = [10, 20, 30, 40]
         const { config } = plotman(
-            { yAxis: { auto: true, pad: 0.1, hasLogScale: false }, xAxis: { min: 0, max: 100, hasLogScale: false } },
+            { yAxis: { auto: true, pad: 0.1, hasLogScale: false, nice: false }, xAxis: { min: 0, max: 100, hasLogScale: false } },
             data,
         )
         // range = 30, pad = 3 each side
@@ -40,7 +40,7 @@ describe('auto-scale axes', () => {
             [9, 2],
         ]
         const { config } = plotman(
-            { xAxis: { min: 'auto', max: 'auto', hasLogScale: false }, yAxis: { min: 0, max: 10, hasLogScale: false } },
+            { xAxis: { min: 'auto', max: 'auto', hasLogScale: false, nice: false }, yAxis: { min: 0, max: 10, hasLogScale: false } },
             data,
         )
         expect(config.xAxis.min).toBe(1)
@@ -54,7 +54,7 @@ describe('auto-scale axes', () => {
             { t: 3, v: 60 },
         ]
         const { config } = plotman(
-            { yAxis: { auto: true, hasLogScale: false }, xAxis: { min: 0, max: 4, hasLogScale: false } },
+            { yAxis: { auto: true, hasLogScale: false, nice: false }, xAxis: { min: 0, max: 4, hasLogScale: false } },
             data,
             { x: 't', y: 'v', z: '' },
         )
@@ -84,7 +84,7 @@ describe('auto-scale axes', () => {
     it('spreads single-value data so range is non-zero', () => {
         const data = [5, 5, 5]
         const { config } = plotman(
-            { yAxis: { auto: true, hasLogScale: false }, xAxis: { min: 0, max: 10, hasLogScale: false } },
+            { yAxis: { auto: true, hasLogScale: false, nice: false }, xAxis: { min: 0, max: 10, hasLogScale: false } },
             data,
         )
         expect(config.yAxis.min).toBe(4.75)
@@ -139,5 +139,120 @@ describe('backward compatibility', () => {
         expect(result).toHaveProperty('plotX')
         expect(result).toHaveProperty('plotY')
         expect(result).toHaveProperty('unplot')
+    })
+})
+
+describe('niceTicks', () => {
+    it('produces human-friendly tick values and rounds bounds (nice: true)', () => {
+        const { config } = plotman({
+            yAxis: { min: 0, max: 987, nice: true, targetTickCount: 5, hasLogScale: false },
+            xAxis: { min: 0, max: 100, hasLogScale: false },
+        })
+        // niceNum(987, false) = 1000, interval = niceNum(1000/4, true) = 200
+        expect(config.yAxis.max).toBe(1000)
+        expect(config.yAxis.min).toBe(0)
+        const tickValues = config.yAxis.ticks!.map((t) => t.value)
+        expect(tickValues.every((v) => v % 200 === 0)).toBe(true)
+    })
+
+    it('tick labels are clean integers with no floating-point artifacts', () => {
+        const { config } = plotman({
+            yAxis: { min: 0, max: 1, nice: true, targetTickCount: 5, hasLogScale: false },
+            xAxis: { min: 0, max: 10, hasLogScale: false },
+        })
+        const labels = config.yAxis.ticks!.map((t) => String(t.label))
+        labels.forEach((label) => {
+            expect(label).not.toMatch(/\.\d{10}/)
+        })
+    })
+
+    it('nice: false opts out and reverts to 2-bin fallback', () => {
+        const { config } = plotman({
+            yAxis: { min: 0, max: 987, nice: false, hasLogScale: false },
+            xAxis: { min: 0, max: 100, hasLogScale: false },
+        })
+        // Without nice, default is 2 bins → 3 ticks (min, mid, max)
+        expect(config.yAxis.ticks!.length).toBe(3)
+        expect(config.yAxis.max).toBe(987)
+    })
+
+    it('custom targetTickCount controls tick density', () => {
+        const { config: cfg3 } = plotman({
+            yAxis: { min: 0, max: 1000, nice: true, targetTickCount: 3, hasLogScale: false },
+            xAxis: { min: 0, max: 100, hasLogScale: false },
+        })
+        const { config: cfg10 } = plotman({
+            yAxis: { min: 0, max: 1000, nice: true, targetTickCount: 10, hasLogScale: false },
+            xAxis: { min: 0, max: 100, hasLogScale: false },
+        })
+        expect(cfg3.yAxis.ticks!.length).toBeLessThan(cfg10.yAxis.ticks!.length)
+    })
+
+    it('niced bounds are reflected in returned config', () => {
+        const { config } = plotman({
+            yAxis: { min: 3, max: 97, nice: true, hasLogScale: false },
+            xAxis: { min: 0, max: 100, hasLogScale: false },
+        })
+        expect(config.yAxis.min).toBe(0)
+        expect(config.yAxis.max).toBe(100)
+    })
+
+    it('auto: true + nice: true — auto-derived bounds are then niced', () => {
+        // Data range 12–88; auto gives min=12, max=88; nice rounds to clean interval
+        const data = [12, 88]
+        const { config } = plotman(
+            { yAxis: { auto: true, nice: true, hasLogScale: false }, xAxis: { min: 0, max: 100, hasLogScale: false } },
+            data,
+        )
+        // Nice interval should be a power of 1/2/5×10ⁿ
+        const interval = config.yAxis.ticks![1].value - config.yAxis.ticks![0].value
+        const magnitude = Math.pow(10, Math.floor(Math.log10(interval)))
+        const ratio = interval / magnitude
+        expect([1, 2, 5, 10]).toContain(ratio)
+        // Bounds must be multiples of the interval
+        expect(config.yAxis.min % interval).toBeCloseTo(0, 10)
+        expect(config.yAxis.max % interval).toBeCloseTo(0, 10)
+    })
+
+    it('bins strategy supersedes nice', () => {
+        const { config } = plotman({
+            yAxis: { min: 0, max: 987, bins: 4, nice: true, hasLogScale: false },
+            xAxis: { min: 0, max: 100, hasLogScale: false },
+        })
+        // bins: 4 → exactly 5 ticks at 0, 246.75, 493.5, 740.25, 987
+        expect(config.yAxis.ticks!.length).toBe(5)
+        expect(config.yAxis.max).toBe(987)
+    })
+
+    it('user-supplied interval supersedes nice', () => {
+        const { config } = plotman({
+            yAxis: { min: 0, max: 100, interval: 25, nice: true, hasLogScale: false },
+            xAxis: { min: 0, max: 100, hasLogScale: false },
+        })
+        const tickValues = config.yAxis.ticks!.map((t) => t.value)
+        expect(tickValues).toContain(25)
+        expect(tickValues).toContain(50)
+        expect(tickValues).toContain(75)
+        expect(config.yAxis.max).toBe(100)
+    })
+
+    it('log-scale axis skips nice to preserve positive bounds', () => {
+        const { config } = plotman({
+            yAxis: { min: 1, max: 1000, nice: true, hasLogScale: true },
+            xAxis: { min: 0, max: 100, hasLogScale: false },
+        })
+        expect(config.yAxis.min).toBe(1)
+        expect(config.yAxis.max).toBe(1000)
+    })
+
+    it('default nice behavior — axes without explicit interval get nice ticks', () => {
+        const { config } = plotman({
+            yAxis: { min: 0, max: 100, hasLogScale: false },
+            xAxis: { min: 0, max: 100, hasLogScale: false },
+        })
+        const interval = config.yAxis.ticks![1].value - config.yAxis.ticks![0].value
+        const magnitude = Math.pow(10, Math.floor(Math.log10(interval)))
+        const ratio = interval / magnitude
+        expect([1, 2, 5, 10]).toContain(ratio)
     })
 })

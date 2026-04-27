@@ -28,6 +28,8 @@ export type Axis = {
     categories?: string[]
     ticks?: Tick[]
     hasLogScale: boolean
+    nice?: boolean
+    targetTickCount?: number
 }
 
 export type Config = {
@@ -164,6 +166,46 @@ function resolveAuto(axis: Axis, which: 'x' | 'y', data: any[] | undefined, plot
     }
 }
 
+function niceNum(range: number, round: boolean): number {
+    const exp = Math.floor(Math.log10(range))
+    const fraction = range / Math.pow(10, exp)
+    let niceFraction: number
+    if (round) {
+        if (fraction < 1.5) niceFraction = 1
+        else if (fraction < 3) niceFraction = 2
+        else if (fraction < 7) niceFraction = 5
+        else niceFraction = 10
+    } else {
+        if (fraction <= 1) niceFraction = 1
+        else if (fraction <= 2) niceFraction = 2
+        else if (fraction <= 5) niceFraction = 5
+        else niceFraction = 10
+    }
+    return niceFraction * Math.pow(10, exp)
+}
+
+function resolveNice(axis: Axis) {
+    if (axis.nice === false) return
+    if (axis.hasLogScale) return
+    if (axis.categories && axis.categories.length > 0) return
+    if (axis.bins != null) return
+    if (axis.values != null) return
+    if (axis.interval != null) return
+
+    const min = axis.min as number
+    const max = axis.max as number
+    const range = Math.abs(max - min)
+    if (range === 0) return
+
+    const target = Math.max(2, axis.targetTickCount ?? 5)
+    const niceRange = niceNum(range, false)
+    const interval = niceNum(niceRange / (target - 1), true)
+
+    axis.min = Math.floor(min / interval) * interval
+    axis.max = Math.ceil(max / interval) * interval
+    axis.interval = interval
+}
+
 function plotman(config: Config = defaultConfig, data?: any[], plotOptions?: PlotOptions) {
     config = merge(defaultConfig, config) as Config
     let { width, height, margin, xAxis, yAxis } = config
@@ -180,6 +222,9 @@ function plotman(config: Config = defaultConfig, data?: any[], plotOptions?: Plo
 
     resolveAuto(xAxis, 'x', data, plotOptions)
     resolveAuto(yAxis, 'y', data, plotOptions)
+
+    resolveNice(xAxis)
+    resolveNice(yAxis)
 
     let xRange = Math.abs((xAxis.max as number) - (xAxis.min as number))
     xRange = xRange === 0 ? Number.EPSILON : xRange
@@ -237,8 +282,9 @@ function plotman(config: Config = defaultConfig, data?: any[], plotOptions?: Plo
                     // const value = axis.min + binIndex * (axis.interval || 1)
                     const value = axis.interval * Math.ceil(axis.min / axis.interval) + binIndex * axis.interval
                     const coord = (isX ? plotX(value) : plotY(value)) || 0
+                    const cleanValue = parseFloat(value.toPrecision(12))
                     const tick: Tick = {
-                        label: (axis.tick?.prefix || '') + value + (axis.tick?.suffix || ''),
+                        label: (axis.tick?.prefix || '') + cleanValue + (axis.tick?.suffix || ''),
                         value,
                         x: isX ? coord : 0,
                         y: !isX ? coord : 0,
